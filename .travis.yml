@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t borisblade/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run borisblade/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t borisblade/multi-client ./client
+  - docker build -t borisblade/multi-nginx ./nginx
+  - docker build -t borisblade/multi-server ./server
+  - docker build -t borisblade/multi-worker ./worker
+# Log in to the docker CLI
+script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to docker hub
+  - docker push borisblade/multi-client
+  - docker push borisblade/multi-nginx
+  - docker push borisblade/multi-server
+  - docker push borisblade/multi-worker
